@@ -5,17 +5,30 @@ const wimbledonRoutes = require('./routes/wimbledon');
 const logger = require('./middlwares/logger');
 const apiLimiter = require('./middlwares/rateLimiter');
 const { errorHandler, notFound } = require('./middlwares/errorHandler');
+const path = require('path');
+const cors = require('cors');
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        'script-src': ["'self'", "'unsafe-inline'"],
+      },
+    },
+  })
+);
 app.use(express.json());
 app.use(logger);
+app.use(express.static(path.join(__dirname)));
+app.use(cors());
 
 app.use('/wimbledon', apiLimiter, wimbledonRoutes);
 
 app.get('/', (req, res) => {
-  res.send('api is working fine');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.use(notFound);
